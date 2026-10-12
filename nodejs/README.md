@@ -21,6 +21,7 @@ src/
   main.js     a execução: configuração, verificações, estado, aviso e logs
   config.js   leitura e validação das variáveis de ambiente
   check.js    requisição com tempo limite, novas tentativas e concorrência
+  http.js     requisições com node:http(s), mais leve que fetch em memória
   state.js    estado entre execuções no diretório persistente
 test/         testes com um servidor HTTP local
 ```

@@ -37,6 +37,14 @@ test('a non-retryable status fails without retrying', async () => {
   assert.equal(result.attempts, 1)
 })
 
+test('redirects are followed, up to a limit', async () => {
+  assert.equal((await checkTarget(`${server.base}/redirect`, options)).status, 200)
+
+  const loop = await checkTarget(`${server.base}/loop`, { ...options, maxAttempts: 1 })
+  assert.equal(loop.ok, false)
+  assert.equal(loop.status, 302)
+})
+
 test('a slow target times out', async () => {
   const result = await checkTarget(`${server.base}/slow`, { ...options, requestTimeoutMs: 100, maxAttempts: 1 })
 

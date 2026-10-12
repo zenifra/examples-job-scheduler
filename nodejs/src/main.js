@@ -1,5 +1,6 @@
 import { checkTarget, mapWithConcurrency } from './check.js'
 import { ConfigError, loadConfig } from './config.js'
+import { request } from './http.js'
 import { diffState, readState, writeState } from './state.js'
 
 export const EXIT = { SUCCESS: 0, FAILURE: 1, CONFIG: 2 }
@@ -20,21 +21,20 @@ function summarize(results, changes) {
   return lines.join('\n')
 }
 
-async function notify(config, text, signal, fetchImpl) {
-  const timeout = AbortSignal.timeout(config.requestTimeoutMs)
-  const response = await fetchImpl(config.webhookUrl, {
+async function notify(config, text, signal) {
+  const body = JSON.stringify({ text })
+  const response = await request(config.webhookUrl, {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ text }),
-    signal: AbortSignal.any([signal, timeout]),
+    headers: { 'content-type': 'application/json', 'content-length': Buffer.byteLength(body) },
+    body,
+    signal: AbortSignal.any([signal, AbortSignal.timeout(config.requestTimeoutMs)]),
   })
-  await response.body?.cancel()
   if (!response.ok) throw new Error(`webhook answered HTTP ${response.status}`)
 }
 
 // Runs the job once and resolves with the process exit code.
 // `signal` is aborted when the platform asks the job to stop (SIGTERM).
-export async function run({ env = process.env, signal = new AbortController().signal, fetchImpl = fetch, log = createLogger(), deadlineMs } = {}) {
+export async function run({ env = process.env, signal = new AbortController().signal, log = createLogger(), deadlineMs } = {}) {
   let config
   try {
     config = loadConfig(env)
@@ -50,7 +50,7 @@ export async function run({ env = process.env, signal = new AbortController().si
 
   try {
     const results = await mapWithConcurrency(config.targets, config.concurrency, (url) =>
-      checkTarget(url, { ...config, signal: jobSignal, fetchImpl }))
+      checkTarget(url, { ...config, signal: jobSignal }))
 
     for (const result of results) {
       if (result.ok) log.info('target up', result)
@@ -72,7 +72,7 @@ export async function run({ env = process.env, signal = new AbortController().si
     const down = results.filter((result) => !result.ok)
     if (config.webhookUrl && (down.length > 0 || changes.length > 0)) {
       try {
-        await notify(config, summarize(results, changes), jobSignal, fetchImpl)
+        await notify(config, summarize(results, changes), jobSignal)
         log.info('notification sent', { webhookHost: new URL(config.webhookUrl).host })
       } catch (error) {
         if (jobSignal.aborted) throw error

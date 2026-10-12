@@ -36,6 +36,7 @@ O verificador é só a desculpa. O que vale copiar é a estrutura em volta dele,
 - **Logs estruturados.** Uma linha JSON por evento, em `stdout`, e erros em `stderr`. Fica fácil ler em **Ver logs** e filtrar depois.
 - **Nunca registra segredos.** A URL do webhook costuma carregar um token, então o log mostra só o host.
 - **Estado opcional e seguro.** O estado entre execuções fica no diretório persistente e é gravado num arquivo temporário renomeado ao final, para nunca ficar pela metade. Se o diretório não estiver disponível, a verificação continua e o problema aparece no log.
+- **Cabe no menor plano.** O pico de memória medido fica em cerca de 20 MiB no Node.js, 25 MiB no Python e menos de 10 MiB no Bun, folgado para os 64 MiB do Job Starter. No Node.js, o exemplo usa `node:https` em vez de `fetch`: o `fetch` carrega o undici e mais que dobra a memória, o que basta para a tarefa ser encerrada por falta de memória num plano pequeno.
 - **Sem dependências externas.** O build fica mais rápido e há menos coisas para manter atualizadas. Quando precisar de bibliotecas, fixe as versões (lockfile no Node e no Bun, versões exatas no `requirements.txt`).
 - **Testado.** Cada pasta tem testes que sobem um servidor HTTP local, sem depender da internet.
 
