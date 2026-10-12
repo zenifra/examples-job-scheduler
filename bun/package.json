@@ -1,0 +1,17 @@
+{
+  "name": "uptime-job-bun",
+  "version": "1.0.0",
+  "description": "Scheduled Job example for Zenifra: checks a list of URLs and reports the ones that are down.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/bun": "1.3.14",
+    "typescript": "5.9.3"
+  },
+  "license": "MIT"
+}

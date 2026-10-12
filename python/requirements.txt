@@ -1,0 +1,2 @@
+# This example only uses the Python standard library.
+# Add your dependencies here, pinned to exact versions (for example: requests==2.32.3).
