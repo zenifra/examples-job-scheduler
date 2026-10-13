@@ -4,9 +4,9 @@ Exemplos prontos para usar como ponto de partida de um [Job agendado](https://do
 
 | Pasta | Runtime | Comando da tarefa |
 | --- | --- | --- |
-| [`nodejs/`](nodejs) | Node.js 22 ou mais recente | `exec node src/index.js` |
-| [`bun/`](bun) | Bun 1.2 ou mais recente | `exec bun run src/index.ts` |
-| [`python/`](python) | Python 3.11 ou mais recente | `exec python -m uptime_job` |
+| [`nodejs/`](nodejs) | Node.js 22 ou mais recente | `node src/index.js` |
+| [`bun/`](bun) | Bun 1.2 ou mais recente | `bun run src/index.ts` |
+| [`python/`](python) | Python 3.11 ou mais recente | `python -m uptime_job` |
 
 Os três fazem a mesma coisa, do mesmo jeito: escolha a linguagem que você já usa e copie a pasta para o seu repositório.
 
@@ -28,7 +28,7 @@ O verificador é só a desculpa. O que vale copiar é a estrutura em volta dele,
 - **O código de saída diz o resultado.** `0` aparece como **Concluída** no Console; qualquer outro valor aparece como **Falhou**. O exemplo usa `1` para falha da tarefa e `2` para configuração inválida.
 - **Valida a configuração antes de começar.** Uma variável de ambiente errada falha na hora, com uma mensagem clara, em vez de quebrar no meio do trabalho.
 - **Encerra com elegância.** Ao cancelar uma execução, pausar ou excluir o Job, a Zenifra envia `SIGTERM` e espera até 30 segundos. O exemplo interrompe o que está fazendo, registra o cancelamento e sai em menos de um segundo.
-- **Usa `exec` no comando da tarefa.** Assim o processo da sua tarefa recebe o `SIGTERM` diretamente, sem um shell no meio que poderia engolir o sinal.
+- **Comando da tarefa simples.** A Zenifra executa o comando diretamente, então o processo da tarefa recebe o `SIGTERM`. Evite `|` e `||` no comando: nesses casos um shell fica no meio e o sinal não chega à tarefa.
 - **Tem prazo próprio.** Toda execução é encerrada pela Zenifra após 60 minutos. O exemplo tem um prazo interno menor (`JOB_DEADLINE_SECONDS`), para registrar o que aconteceu e sair por conta própria.
 - **Toda requisição tem tempo limite.** Uma chamada de rede presa não segura a execução (e a cobrança) até o limite.
 - **Tenta de novo só quando vale a pena**, com espera exponencial e um pouco de aleatoriedade. Um `404` não melhora na segunda tentativa; um `503` pode melhorar.

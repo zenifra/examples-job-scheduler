@@ -9,7 +9,7 @@ Verificador de disponibilidade em Bun e TypeScript, sem dependências de execuç
 | **Diretório raiz** | `bun` (ou `.` se a pasta for a raiz do repositório) |
 | **Runtime** | Bun |
 | **Versão** | 1.2 ou mais recente |
-| **Comando da tarefa** | `exec bun run src/index.ts` |
+| **Comando da tarefa** | `bun run src/index.ts` |
 
 A Zenifra instala as dependências com `bun install --frozen-lockfile`, então mantenha o `bun.lock` no repositório. O Bun executa TypeScript diretamente, sem etapa de build.
 

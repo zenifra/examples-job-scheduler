@@ -9,7 +9,7 @@ Verificador de disponibilidade em Node.js, sem dependências externas. Veja o [R
 | **Diretório raiz** | `nodejs` (ou `.` se a pasta for a raiz do repositório) |
 | **Runtime** | Node.js |
 | **Versão** | 22 ou mais recente |
-| **Comando da tarefa** | `exec node src/index.js` |
+| **Comando da tarefa** | `node src/index.js` |
 
 A Zenifra instala as dependências com `npm ci`, então mantenha o `package-lock.json` no repositório.
 

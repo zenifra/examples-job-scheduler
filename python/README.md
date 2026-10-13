@@ -9,11 +9,9 @@ Verificador de disponibilidade em Python, usando só a biblioteca padrão. Veja 
 | **Diretório raiz** | `python` (ou `.` se a pasta for a raiz do repositório) |
 | **Runtime** | Python |
 | **Versão** | 3.11 ou mais recente |
-| **Comando da tarefa** | `exec python -m uptime_job` |
+| **Comando da tarefa** | `python -m uptime_job` |
 
 A Zenifra instala as dependências do `requirements.txt`. Este exemplo não tem nenhuma, mas o arquivo fica pronto para as suas, com versões fixas.
-
-O `exec` é importante: sem ele, um shell fica como processo principal e não repassa o `SIGTERM`, e a tarefa não consegue encerrar com elegância quando a execução é cancelada.
 
 ## Estrutura
 
