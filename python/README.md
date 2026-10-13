@@ -17,7 +17,8 @@ A Zenifra instala as dependências do `requirements.txt`. Este exemplo não tem 
 
 ```text
 uptime_job/
-  __main__.py  ponto de entrada: sinais de parada e código de saída
+  __main__.py  ponto de entrada: liga o encerramento gracioso e define o código de saída
+  shutdown.py  encerramento gracioso: SIGTERM/SIGINT, evento de parada e saída forçada
   main.py      a execução: configuração, verificações, estado, aviso e logs
   config.py    leitura e validação das variáveis de ambiente
   check.py     requisição com tempo limite e novas tentativas

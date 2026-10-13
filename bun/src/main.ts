@@ -101,7 +101,8 @@ export async function run({ env = Bun.env, signal = new AbortController().signal
     return down.length > 0 && config.failOnDown ? EXIT.FAILURE : EXIT.SUCCESS
   } catch (error) {
     if (signal.aborted) {
-      log.warn('job cancelled before finishing')
+      // The state file is left untouched, so the next run compares with the last complete run.
+      log.warn('job cancelled before finishing', { stateSaved: false })
       return EXIT.FAILURE
     }
     if (deadline.aborted) {

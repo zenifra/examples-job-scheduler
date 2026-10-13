@@ -17,7 +17,8 @@ A Zenifra instala as dependências com `bun install --frozen-lockfile`, então m
 
 ```text
 src/
-  index.ts    ponto de entrada: sinais de parada e código de saída
+  index.ts    ponto de entrada: liga o encerramento gracioso e define o código de saída
+  shutdown.ts encerramento gracioso: SIGTERM/SIGINT, AbortSignal e saída forçada
   main.ts     a execução: configuração, verificações, estado, aviso e logs
   config.ts   leitura e validação das variáveis de ambiente
   check.ts    requisição com tempo limite, novas tentativas e concorrência

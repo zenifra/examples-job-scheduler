@@ -105,7 +105,8 @@ def run(
         pending = set(futures)
         while pending:
             if stop.is_set():
-                log.warn("job cancelled before finishing")
+                # The state file is left untouched, so the next run compares with the last complete run.
+                log.warn("job cancelled before finishing", stateSaved=False)
                 return EXIT_FAILURE
             if time.monotonic() >= deadline_at:
                 stop.set()

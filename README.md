@@ -27,7 +27,7 @@ O verificador é só a desculpa. O que vale copiar é a estrutura em volta dele,
 - **Termina sozinho.** Um Job não é um servidor: ele roda, faz o trabalho e sai. Não abre porta nem fica esperando requisições.
 - **O código de saída diz o resultado.** `0` aparece como **Concluída** no Console; qualquer outro valor aparece como **Falhou**. O exemplo usa `1` para falha da tarefa e `2` para configuração inválida.
 - **Valida a configuração antes de começar.** Uma variável de ambiente errada falha na hora, com uma mensagem clara, em vez de quebrar no meio do trabalho.
-- **Encerra com elegância.** Ao cancelar uma execução, pausar ou excluir o Job, a Zenifra envia `SIGTERM` e espera até 30 segundos. O exemplo interrompe o que está fazendo, registra o cancelamento e sai em menos de um segundo.
+- **Encerra com elegância.** Ao cancelar uma execução, pausar ou excluir o Job, a Zenifra envia `SIGTERM` e espera até 30 segundos. O exemplo interrompe o que está fazendo, registra o cancelamento e sai em menos de um segundo. Veja [Encerramento gracioso](#encerramento-gracioso-sigterm).
 - **Comando da tarefa simples.** A Zenifra executa o comando diretamente, então o processo da tarefa recebe o `SIGTERM`. Evite `|` e `||` no comando: nesses casos um shell fica no meio e o sinal não chega à tarefa.
 - **Tem prazo próprio.** Toda execução é encerrada pela Zenifra após 60 minutos. O exemplo tem um prazo interno menor (`JOB_DEADLINE_SECONDS`), para registrar o que aconteceu e sair por conta própria.
 - **Toda requisição tem tempo limite.** Uma chamada de rede presa não segura a execução (e a cobrança) até o limite.
@@ -39,6 +39,41 @@ O verificador é só a desculpa. O que vale copiar é a estrutura em volta dele,
 - **Cabe no menor plano.** O pico de memória medido fica em cerca de 20 MiB no Node.js, 25 MiB no Python e menos de 10 MiB no Bun, folgado para os 64 MiB do Job Starter. No Node.js, o exemplo usa `node:https` em vez de `fetch`: o `fetch` carrega o undici e mais que dobra a memória, o que basta para a tarefa ser encerrada por falta de memória num plano pequeno.
 - **Sem dependências externas.** O build fica mais rápido e há menos coisas para manter atualizadas. Quando precisar de bibliotecas, fixe as versões (lockfile no Node e no Bun, versões exatas no `requirements.txt`).
 - **Testado.** Cada pasta tem testes que sobem um servidor HTTP local, sem depender da internet.
+
+## Encerramento gracioso (SIGTERM)
+
+Quando você cancela uma execução, pausa ou exclui o Job, a Zenifra envia `SIGTERM` para a tarefa e espera até 30 segundos. Depois disso, o processo é encerrado à força. Uma tarefa bem-comportada usa esse tempo para:
+
+1. **parar de começar trabalho novo**;
+2. **interromper (ou concluir rápido) o que está em andamento**;
+3. **deixar os dados consistentes**: o exemplo só grava o arquivo de estado ao final de uma execução completa, então a próxima execução compara com a última que terminou;
+4. **registrar o que aconteceu e sair** com o código `128 + número do sinal` (`143` para `SIGTERM`).
+
+Cada pasta tem um módulo pequeno que mostra esse padrão, com comentários. Copie-o para a sua tarefa:
+
+| Linguagem | Arquivo | Como o sinal chega ao trabalho |
+| --- | --- | --- |
+| Node.js | [`nodejs/src/shutdown.js`](nodejs/src/shutdown.js) | `process.once('SIGTERM', ...)` aborta um `AbortSignal` passado a cada requisição |
+| Bun | [`bun/src/shutdown.ts`](bun/src/shutdown.ts) | o mesmo `AbortSignal`, com tipos |
+| Python | [`python/uptime_job/shutdown.py`](python/uptime_job/shutdown.py) | `signal.signal(SIGTERM, ...)` marca um `threading.Event` que as verificações consultam |
+
+Se alguma parte do trabalho ignorar o pedido de parada, o módulo força a saída após 20 segundos, antes do limite de 30 da Zenifra. `SIGINT` (Ctrl+C) recebe o mesmo tratamento, o que facilita testar localmente.
+
+Nos logs da execução, um cancelamento aparece assim:
+
+```text
+{"level":"info","msg":"job started",...}
+{"level":"warn","msg":"stop signal received","signal":"SIGTERM"}
+{"level":"warn","msg":"job cancelled before finishing","stateSaved":false}
+```
+
+Os testes de cada pasta sobem o processo de verdade, enviam `SIGTERM` e conferem o código de saída e os logs. Para ver com os próprios olhos, rode a tarefa contra um endereço que não responde e aperte Ctrl+C:
+
+```bash
+TARGET_URLS=http://10.255.255.1/ REQUEST_TIMEOUT_MS=20000 node nodejs/src/index.js
+```
+
+A Zenifra executa o **Comando da tarefa** diretamente, então o processo da sua tarefa recebe o sinal. Evite `|` e `||` nesse comando: nesses casos um shell fica no meio e o sinal não chega à tarefa.
 
 ## Como publicar na Zenifra
 
@@ -77,8 +112,10 @@ O tempo limite por requisição vai até 20 segundos para que uma requisição e
 | Código | Significado | No Console |
 | --- | --- | --- |
 | `0` | Todas as URLs responderam (ou `FAIL_ON_DOWN=false`). | **Concluída** |
-| `1` | Alguma URL fora do ar, webhook com erro, prazo interno excedido ou execução interrompida. | **Falhou** |
+| `1` | Alguma URL fora do ar, webhook com erro ou prazo interno excedido. | **Falhou** |
 | `2` | Configuração inválida. | **Falhou** |
+| `143` | Encerrada por `SIGTERM` (execução cancelada, Job pausado ou excluído). | **Cancelada** |
+| `130` | Encerrada por `SIGINT` (Ctrl+C, ao rodar localmente). | — |
 
 ## Rodar localmente
 

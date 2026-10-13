@@ -17,7 +17,8 @@ A Zenifra instala as dependências com `npm ci`, então mantenha o `package-lock
 
 ```text
 src/
-  index.js    ponto de entrada: sinais de parada e código de saída
+  index.js    ponto de entrada: liga o encerramento gracioso e define o código de saída
+  shutdown.js encerramento gracioso: SIGTERM/SIGINT, AbortSignal e saída forçada
   main.js     a execução: configuração, verificações, estado, aviso e logs
   config.js   leitura e validação das variáveis de ambiente
   check.js    requisição com tempo limite, novas tentativas e concorrência
